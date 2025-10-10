@@ -100,6 +100,20 @@ docker-compose up
 
 All tests must pass for the application to build successfully.
 
+## Manual Test Execution
+When the application is running, you can manually execute the test scenarios using the complete URLs:
+
+1. **List all medications**: http://localhost:8000/api/medications
+2. **Search medications**: http://localhost:8000/api/medications/search?name=mel
+3. **Get specific medication**: http://localhost:8000/api/medications/1
+
+Use tools like curl, Postman, or your browser to test these endpoints.
+
+### Swagger UI Testing
+The API can also be tested interactively using Swagger UI:
+- **URL**: http://localhost:8000/swagger-ui.html
+- **Features**: Try out endpoints, view request/response examples, explore API schema
+
 ## Configuration
 
 ### Environment Variables
