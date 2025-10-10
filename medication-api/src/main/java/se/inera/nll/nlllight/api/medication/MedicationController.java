@@ -21,7 +21,7 @@ public class MedicationController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Medication> get(@PathVariable Long id) {
+    public ResponseEntity<Medication> get(@PathVariable("id") Long id) {
         return repository.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
