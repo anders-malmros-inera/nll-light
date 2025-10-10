@@ -24,6 +24,11 @@ Integration tests for the Medication REST API endpoints.
 GET /api/medications
 ```
 
+**Complete URL** (when application is running):
+```
+http://localhost:8000/api/medications
+```
+
 **Expected Response**:
 - Status: 2xx Success
 - Body: Non-null List<Medication>
@@ -42,6 +47,11 @@ GET /api/medications
 GET /api/medications/search?name=mel
 ```
 
+**Complete URL** (when application is running):
+```
+http://localhost:8000/api/medications/search?name=mel
+```
+
 **Expected Response**:
 - Status: 2xx Success
 - Body: Non-null List<Medication>
@@ -57,6 +67,11 @@ GET /api/medications/search?name=mel
 **HTTP Request**:
 ```
 GET /api/medications/1
+```
+
+**Complete URL** (when application is running):
+```
+http://localhost:8000/api/medications/1
 ```
 
 **Expected Response**:
@@ -93,10 +108,25 @@ mvn -pl medication-api test jacoco:report
 ```
 
 ## Test Configuration
-- **Base URL**: `http://localhost:{random_port}`
+- **Base URL**: `http://localhost:{random_port}` (during automated tests)
+- **API Gateway URL**: `http://localhost:8000` (for manual testing)
 - **Content Type**: JSON
 - **Assertions**: AssertJ assertions
 - **HTTP Client**: Spring TestRestTemplate
+
+## Manual Test Execution
+When the application is running, you can manually execute the test scenarios using the complete URLs:
+
+1. **List all medications**: http://localhost:8000/api/medications
+2. **Search medications**: http://localhost:8000/api/medications/search?name=mel
+3. **Get specific medication**: http://localhost:8000/api/medications/1
+
+Use tools like curl, Postman, or your browser to test these endpoints.
+
+### Swagger UI Testing
+The API can also be tested interactively using Swagger UI:
+- **URL**: http://localhost:8000/swagger-ui.html
+- **Features**: Try out endpoints, view request/response examples, explore API schema
 
 ## Coverage Requirements
 - **Line Coverage**: > 80%

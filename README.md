@@ -45,6 +45,8 @@ docker compose up --build
 # - API Gateway: http://localhost:8000
 # - API Direct: http://localhost:8081
 # - Kong Admin: http://localhost:8001
+# - Swagger UI: http://localhost:8000/swagger-ui.html
+# - API Docs: http://localhost:8000/v3/api-docs
 ```
 
 ### Manual (Maven)
@@ -106,7 +108,11 @@ All tests must pass for the application to build successfully.
 
 ### Kong Configuration
 - **Declarative Config**: `kong.yml`
-- **Routes**: `/api/medications` → medication API service
+- **Routes**: 
+  - `/api/medications` → medication API service
+  - `/v3/api-docs` → OpenAPI specification
+  - `/swagger-ui.html` → Swagger UI
+  - `/swagger-ui/**` → Swagger UI resources
 - **Database**: DB-less mode (configuration only)
 
 ## Development

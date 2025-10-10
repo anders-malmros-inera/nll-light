@@ -8,3 +8,12 @@ services:
         paths:
           - /api/medications
         strip_path: false
+      - name: swagger-api-docs-route
+        paths:
+          - /v3/api-docs
+        strip_path: false
+      - name: swagger-ui-route
+        paths:
+          - /swagger-ui.html
+          - /swagger-ui
+        strip_path: false
