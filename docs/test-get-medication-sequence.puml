@@ -1,0 +1,22 @@
+@startuml Medication API - Get Single Medication Test
+title Medication API - Get Single Medication Test Sequence Diagram
+
+actor Tester
+participant TestRestTemplate
+participant MedicationController
+participant MedicationRepository
+database H2Database
+
+Tester -> TestRestTemplate: GET /api/medications/1
+TestRestTemplate -> MedicationController: get(1)
+MedicationController -> MedicationRepository: findById(1)
+MedicationRepository -> H2Database: SELECT * FROM medication WHERE id = 1
+H2Database --> MedicationRepository: medication record (id=1)
+MedicationRepository --> MedicationController: Optional<Medication>
+MedicationController --> TestRestTemplate: ResponseEntity<Medication>
+TestRestTemplate --> Tester: Medication object
+
+note right: Test validates:
+note right: - Medication is not null
+note right: - Medication name equals "Alimemazin"
+@enduml

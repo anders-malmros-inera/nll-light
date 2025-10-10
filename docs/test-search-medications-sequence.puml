@@ -1,0 +1,23 @@
+@startuml Medication API - Search Medications Test
+title Medication API - Search Medications Test Sequence Diagram
+
+actor Tester
+participant TestRestTemplate
+participant MedicationController
+participant MedicationRepository
+database H2Database
+
+Tester -> TestRestTemplate: GET /api/medications/search?name=mel
+TestRestTemplate -> MedicationController: search("mel")
+MedicationController -> MedicationRepository: findByNameContainingIgnoreCase("mel")
+MedicationRepository -> H2Database: SELECT * FROM medication WHERE LOWER(name) LIKE '%mel%'
+H2Database --> MedicationRepository: matching medication records
+MedicationRepository --> MedicationController: List<Medication>
+MedicationController --> TestRestTemplate: JSON response
+TestRestTemplate --> Tester: ResponseEntity<List<Medication>>
+
+note right: Test validates:
+note right: - HTTP 2xx status
+note right: - Non-null response body
+note right: - Contains "Melatonin" in results
+@enduml

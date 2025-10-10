@@ -1,0 +1,24 @@
+@startuml Medication API - List Medications Test
+title Medication API - List Medications Test Sequence Diagram
+
+actor Tester
+participant TestRestTemplate
+participant MedicationController
+participant MedicationRepository
+database H2Database
+
+Tester -> TestRestTemplate: GET /api/medications
+TestRestTemplate -> MedicationController: list()
+MedicationController -> MedicationRepository: findAll()
+MedicationRepository -> H2Database: SELECT * FROM medication
+H2Database --> MedicationRepository: medication records
+MedicationRepository --> MedicationController: List<Medication>
+MedicationController --> TestRestTemplate: JSON response
+TestRestTemplate --> Tester: ResponseEntity<List<Medication>>
+
+note right: Test validates:
+note right: - HTTP 2xx status
+note right: - Non-null response body
+note right: - At least 3 medications
+note right: - Contains expected medication names
+@enduml
