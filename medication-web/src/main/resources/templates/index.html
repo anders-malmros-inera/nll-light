@@ -9,9 +9,20 @@
     th, td { border: 1px solid #ddd; padding: 8px; }
     th { background: #f6f8fa; }
     code { background: #f6f8fa; padding: 2px 4px; }
+    .user-info { background: #e8f4fd; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
+    .logout-btn { background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
+    .logout-btn:hover { background: #c82333; }
   </style>
 </head>
 <body>
+<div class="user-info">
+  <h2>Välkommen, <span th:text="${userName}">Användare</span>!</h2>
+  <p th:if="${userEmail}">Du är inloggad med: <strong th:text="${userEmail}">email@example.com</strong></p>
+  <form th:action="@{/logout}" method="post" style="display: inline;">
+    <button type="submit" class="logout-btn">Logga ut</button>
+  </form>
+</div>
+
 <h1>Läkemedel</h1>
 <p>API-bas: <code th:text="${apiBaseUrl}">http://localhost:8081</code></p>
 <table>

@@ -14,6 +14,21 @@ services:
       - "8000:8000"  # Kong proxy port
       - "8001:8001"  # Kong admin port
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-file
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_RELATIVE_PATH: /auth
+    command: start-dev --import-realm
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    ports:
+      - "8082:8080"
+
   medication-api:
     build:
       context: .
@@ -31,5 +46,9 @@ services:
       - API_BASE_URL=http://kong:8000
     depends_on:
       - kong
+      - keycloak
     ports:
       - "8080:8080"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+      - "localhost:host-gateway"

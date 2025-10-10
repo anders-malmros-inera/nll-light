@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>nll-light: Login</title>
+  <style>
+    body { font-family: sans-serif; margin: 2rem; text-align: center; }
+    .login-container { max-width: 400px; margin: 0 auto; padding: 2rem; border: 1px solid #ddd; border-radius: 8px; }
+    .keycloak-btn { background: #4c5fd5; color: white; padding: 12px 24px; border: none; border-radius: 4px; text-decoration: none; display: inline-block; font-size: 16px; }
+    .keycloak-btn:hover { background: #3b4ac2; }
+    .error-message { color: #d32f2f; background: #ffebee; padding: 10px; border-radius: 4px; margin-bottom: 1rem; border: 1px solid #ffcdd2; }
+  </style>
+</head>
+<body>
+<div class="login-container">
+  <h1>nll-light</h1>
+  <h2>Logga in med Keycloak</h2>
+  <div th:if="${error}" class="error-message">
+    <p th:text="${error}"></p>
+  </div>
+  <p>För att komma åt läkemedelsinformationen behöver du logga in.</p>
+  <p><strong>Test credentials:</strong> user666 / secret</p>
+  <a href="/oauth2/authorization/keycloak" class="keycloak-btn">Logga in med Keycloak</a>
+</div>
+</body>
+</html>
