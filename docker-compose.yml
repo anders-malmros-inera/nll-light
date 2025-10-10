@@ -1,0 +1,22 @@
+version: "3.9"
+
+services:
+  medication-api:
+    build:
+      context: .
+      dockerfile: medication-api/Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8081:8080"
+
+  medication-web:
+    build:
+      context: .
+      dockerfile: medication-web/Dockerfile
+    environment:
+      - API_BASE_URL=http://medication-api:8080
+    depends_on:
+      - medication-api
+    ports:
+      - "8080:8080"
