@@ -142,35 +142,39 @@ spring.security.oauth2.client.registration.keycloak.client-secret=web-app-secret
 spring.security.oauth2.client.registration.keycloak.scope=openid,profile,email
 spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
 spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.keycloak.client-authentication-method=client_secret_post
 
 # Provider endpoints (mixed browser-facing and container-internal URLs)
 spring.security.oauth2.client.provider.keycloak.authorization-uri=http://localhost:8082/auth/realms/nll-light/protocol/openid-connect/auth
 spring.security.oauth2.client.provider.keycloak.token-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/token
-spring.security.oauth2.client.provider.keycloak.user-info-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/userinfo
+# userinfo endpoint OMITTED - user info extracted from ID token to avoid issuer mismatch
 spring.security.oauth2.client.provider.keycloak.jwk-set-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/certs
 spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
 ```
 
 **Why mixed URLs?**
 - **Browser-facing** (`localhost:8082`): Authorization endpoint must be reachable by the user's browser
-- **Container-internal** (`keycloak:8080`): Token, userinfo, and JWK endpoints are called server-side from the web container
+- **Container-internal** (`keycloak:8080`): Token and JWK endpoints are called server-side from the web container
+- **No userinfo endpoint**: User information is extracted from the ID token instead of calling the userinfo endpoint. This avoids issuer mismatch errors that occur when Keycloak validates tokens issued with different issuer URLs.
 
 ### Custom JWT Decoder
-`medication-web` includes a custom `JwtDecoder` bean in `SecurityConfig.java` to handle issuer validation:
+`medication-web` includes a custom `JwtDecoder` bean in `SecurityConfig.java` without issuer validation:
 
 ```java
 @Bean
-public JwtDecoder jwtDecoder() {
-    String jwkSetUri = "http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/certs";
-    String expectedIssuer = "http://localhost:8082/auth/realms/nll-light";
-    
+public JwtDecoder jwtDecoder(
+        @Value("${spring.security.oauth2.client.provider.keycloak.jwk-set-uri}") String jwkSetUri
+) {
     NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-    decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(expectedIssuer));
+    // No issuer validation - Keycloak uses different URLs for browser vs container access
     return decoder;
 }
 ```
 
-This allows tokens issued with `localhost:8082` issuer to be validated while fetching JWKS from the container-accessible URL.
+This configuration:
+- Fetches JWKS from the container-accessible URL (`keycloak:8080`)
+- Skips issuer validation to allow tokens issued with `localhost:8082` issuer
+- Extracts user info from ID token claims instead of calling userinfo endpoint
 
 ## Keycloak Admin Console
 

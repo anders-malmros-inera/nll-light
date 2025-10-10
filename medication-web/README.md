@@ -62,12 +62,13 @@ spring.security.oauth2.client.registration.keycloak.client-secret=web-app-secret
 spring.security.oauth2.client.registration.keycloak.scope=openid,profile,email
 spring.security.oauth2.client.registration.keycloak.authorization-grant-type=authorization_code
 spring.security.oauth2.client.registration.keycloak.redirect-uri={baseUrl}/login/oauth2/code/{registrationId}
+spring.security.oauth2.client.registration.keycloak.client-authentication-method=client_secret_post
 
 # Provider Endpoints
 # Note: Mixed browser-facing (localhost:8082) and container-internal (keycloak:8080) URLs
 spring.security.oauth2.client.provider.keycloak.authorization-uri=http://localhost:8082/auth/realms/nll-light/protocol/openid-connect/auth
 spring.security.oauth2.client.provider.keycloak.token-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/token
-spring.security.oauth2.client.provider.keycloak.user-info-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/userinfo
+# userinfo endpoint OMITTED - user info extracted from ID token to avoid issuer mismatch
 spring.security.oauth2.client.provider.keycloak.jwk-set-uri=http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/certs
 spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_username
 ```
@@ -79,9 +80,13 @@ spring.security.oauth2.client.provider.keycloak.user-name-attribute=preferred_us
 - The browser redirects directly to Keycloak for login
 
 **Container-internal (`keycloak:8080`)**:
-- Token exchange, userinfo, and JWKS endpoints are called server-side
+- Token exchange and JWKS endpoints are called server-side
 - The web container uses Docker network DNS to reach Keycloak
 - More secure as these endpoints aren't exposed to the browser
+
+**No userinfo endpoint**:
+- User information is extracted from the ID token claims instead of calling Keycloak's userinfo endpoint
+- This avoids issuer mismatch errors that occur when Keycloak validates tokens issued with different issuer URLs (browser: `localhost:8082`, container: `keycloak:8080`)
 
 ### Custom JWT Decoder
 
@@ -89,15 +94,13 @@ File: `src/main/java/se/inera/nll/nlllight/web/SecurityConfig.java`
 
 ```java
 @Bean
-public JwtDecoder jwtDecoder() {
-    // Fetch JWKS from container-internal URL
-    String jwkSetUri = "http://keycloak:8080/auth/realms/nll-light/protocol/openid-connect/certs";
-    
-    // Validate issuer as browser-facing URL (matches token issuer claim)
-    String expectedIssuer = "http://localhost:8082/auth/realms/nll-light";
-    
+public JwtDecoder jwtDecoder(
+        @Value("${spring.security.oauth2.client.provider.keycloak.jwk-set-uri}") String jwkSetUri
+) {
     NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-    decoder.setJwtValidator(JwtValidators.createDefaultWithIssuer(expectedIssuer));
+    // No issuer validation - Keycloak uses different URLs for browser vs container access
+    return decoder;
+}
     return decoder;
 }
 ```
