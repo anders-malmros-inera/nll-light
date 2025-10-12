@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Create Prescription - nll-light</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .header { background: #27ae60; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .user-info { text-align: right; }
+        .user-info small { opacity: 0.8; }
+        .container { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+        .back-link { color: #27ae60; text-decoration: none; display: inline-block; margin-bottom: 1rem; }
+        .back-link:hover { text-decoration: underline; }
+        .form-card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #27ae60; }
+        .form-card h2 { margin-top: 0; color: #27ae60; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: 600; color: #34495e; }
+        .form-group input, .form-group select, .form-group textarea { 
+            width: 100%; 
+            padding: 0.75rem; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+            font-size: 1rem; 
+            box-sizing: border-box;
+        }
+        .form-group textarea { min-height: 100px; resize: vertical; }
+        .form-group small { color: #777; display: block; margin-top: 0.25rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer; border: none; margin-right: 0.5rem; font-size: 1rem; }
+        .btn-primary { background: #27ae60; color: white; }
+        .btn-primary:hover { background: #229954; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .error { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .success { background: #d4edda; color: #155724; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .required { color: #e74c3c; }
+        .logout-form { display: inline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚕️ nll-light - Prescriber Portal</h1>
+        <div class="user-info">
+            <div><strong th:text="${userName}">Prescriber</strong></div>
+            <small>Role: Prescriber</small><br/>
+            <form th:action="@{/logout}" method="post" class="logout-form">
+                <button type="submit" class="btn btn-secondary" style="margin-top: 0.5rem;">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <a href="/prescriber/dashboard" class="back-link">← Back to Dashboard</a>
+
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <div th:if="${success}" class="success" th:text="${success}"></div>
+
+        <div class="form-card">
+            <h2>📝 Create New Prescription</h2>
+            <p>Fill in the details below to create a new prescription for a patient.</p>
+
+            <form th:action="@{/prescriber/prescriptions}" method="post" th:object="${request}">
+                <div class="form-group">
+                    <label for="patientId">Patient ID <span class="required">*</span></label>
+                    <input type="text" id="patientId" name="patientId" th:field="*{patientId}" required 
+                           placeholder="e.g., patient-001"/>
+                    <small>Enter the unique patient identifier</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="medicationId">Medication <span class="required">*</span></label>
+                    <select id="medicationId" name="medicationId" th:field="*{medicationId}" required>
+                        <option value="">-- Select a medication --</option>
+                        <option th:each="med : ${medications}" 
+                                th:value="${med.id}" 
+                                th:text="${med.tradeName + ' (' + med.genericName + ') - ' + med.form + ' ' + med.strength}">
+                            Medication
+                        </option>
+                    </select>
+                    <small>Select the medication to prescribe</small>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="dosage">Dosage <span class="required">*</span></label>
+                        <input type="text" id="dosage" name="dosage" th:field="*{dosage}" required 
+                               placeholder="e.g., 500mg"/>
+                        <small>Dosage per administration</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="quantity">Quantity <span class="required">*</span></label>
+                        <input type="number" id="quantity" name="quantity" th:field="*{quantity}" required min="1"
+                               placeholder="e.g., 30"/>
+                        <small>Number of units</small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="daysSupply">Days Supply <span class="required">*</span></label>
+                        <input type="number" id="daysSupply" name="daysSupply" th:field="*{daysSupply}" required min="1"
+                               placeholder="e.g., 30"/>
+                        <small>Number of days the prescription should last</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="frequency">Frequency <span class="required">*</span></label>
+                        <input type="text" id="frequency" name="frequency" th:field="*{frequency}" required 
+                               placeholder="e.g., Once daily"/>
+                        <small>How often to take the medication</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="instructions">Instructions</label>
+                    <textarea id="instructions" name="instructions" th:field="*{instructions}" 
+                              placeholder="e.g., Take with food. Avoid alcohol."></textarea>
+                    <small>Additional instructions for the patient (optional)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="refillsAllowed">Refills Allowed <span class="required">*</span></label>
+                    <input type="number" id="refillsAllowed" name="refillsAllowed" th:field="*{refillsAllowed}" 
+                           required min="0" max="12" value="0" placeholder="0"/>
+                    <small>Number of refills allowed (0-12)</small>
+                </div>
+
+                <div style="margin-top: 2rem; border-top: 1px solid #ecf0f1; padding-top: 1.5rem;">
+                    <button type="submit" class="btn btn-primary">Create Prescription</button>
+                    <a href="/prescriber/dashboard" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Add client-side validation feedback
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const patientId = document.getElementById('patientId').value;
+            const medicationId = document.getElementById('medicationId').value;
+            
+            if (!patientId || !medicationId) {
+                e.preventDefault();
+                alert('Please fill in all required fields marked with *');
+            }
+        });
+    </script>
+</body>
+</html>

@@ -9,10 +9,11 @@
   "resetPasswordAllowed": false,
   "editUsernameAllowed": false,
   "bruteForceProtected": true,
+  "loginTheme": "nll-light",
   "clients": [
     {
       "clientId": "medication-web",
-      "name": "Medication Web App",
+      "name": "NLL Light App",
       "description": "Web application for medication management",
       "enabled": true,
       "clientAuthenticatorType": "client-secret",
@@ -544,7 +545,152 @@
       ]
     }
   ],
+  "roles": {
+    "realm": [
+      {
+        "name": "PATIENT",
+        "description": "Patient role - can view own prescriptions and medications",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PRESCRIBER",
+        "description": "Prescriber role - can create and manage prescriptions",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "PHARMACIST",
+        "description": "Pharmacist role - can dispense medications and counsel patients",
+        "composite": false,
+        "clientRole": false
+      },
+      {
+        "name": "ADMIN",
+        "description": "Administrator role - full system access",
+        "composite": false,
+        "clientRole": false
+      }
+    ],
+    "client": {}
+  },
   "users": [
+    {
+      "username": "patient001",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Test",
+      "lastName": "Patient",
+      "email": "patient001@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "patient001",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-nll-light",
+        "PATIENT"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "attributes": {
+        "patient-id": ["patient-001"]
+      },
+      "groups": []
+    },
+    {
+      "username": "prescriber001",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Dr. Anna",
+      "lastName": "Andersson",
+      "email": "prescriber001@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "prescriber001",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-nll-light",
+        "PRESCRIBER"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "attributes": {
+        "prescriber-id": ["prescriber-001"]
+      },
+      "groups": []
+    },
+    {
+      "username": "pharmacist001",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "Lars",
+      "lastName": "Larsson",
+      "email": "pharmacist001@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "pharmacist001",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-nll-light",
+        "PHARMACIST"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "attributes": {
+        "pharmacist-id": ["pharmacist-001"]
+      },
+      "groups": []
+    },
+    {
+      "username": "admin",
+      "enabled": true,
+      "emailVerified": true,
+      "firstName": "System",
+      "lastName": "Admin",
+      "email": "admin@example.com",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "default-roles-nll-light",
+        "ADMIN",
+        "PATIENT",
+        "PRESCRIBER",
+        "PHARMACIST"
+      ],
+      "clientRoles": {
+        "account": [
+          "manage-account",
+          "view-profile"
+        ]
+      },
+      "groups": []
+    },
     {
       "username": "user666",
       "enabled": true,
@@ -555,18 +701,22 @@
       "credentials": [
         {
           "type": "password",
-          "value": "secret",
+          "value": "user666",
           "temporary": false
         }
       ],
       "realmRoles": [
-        "default-roles-nll-light"
+        "default-roles-nll-light",
+        "PATIENT"
       ],
       "clientRoles": {
         "account": [
           "manage-account",
           "view-profile"
         ]
+      },
+      "attributes": {
+        "patient-id": ["patient-001"]
       },
       "groups": []
     }

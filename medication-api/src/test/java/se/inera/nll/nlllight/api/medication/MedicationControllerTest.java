@@ -32,7 +32,7 @@ class MedicationControllerTest {
         assertThat(resp.getBody()).isNotNull();
         assertThat(resp.getBody()).hasSizeGreaterThanOrEqualTo(3);
         assertThat(resp.getBody()).extracting(Medication::getName)
-                .contains("Alimemazin", "Elvanse", "Melatonin");
+                .contains("Alimemazin Evolan", "Elvanse", "Melatonin Orifarm");
     }
 
     @Test
@@ -44,13 +44,13 @@ class MedicationControllerTest {
         assertThat(resp.getStatusCode().is2xxSuccessful()).isTrue();
         assertThat(resp.getBody()).isNotNull();
         assertThat(resp.getBody()).extracting(Medication::getName)
-                .contains("Melatonin");
+                .contains("Melatonin Orifarm");
     }
 
     @Test
     void get_shouldReturnSingleMedication() {
         Medication med = rest.getForObject("http://localhost:" + port + "/api/medications/1", Medication.class);
         assertThat(med).isNotNull();
-        assertThat(med.getName()).isEqualTo("Alimemazin");
+        assertThat(med.getName()).isEqualTo("Alimemazin Evolan");
     }
 }

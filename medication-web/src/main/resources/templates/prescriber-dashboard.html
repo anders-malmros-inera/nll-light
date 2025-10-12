@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Prescriber Dashboard - nll-light</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .header { background: #27ae60; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .user-info { text-align: right; }
+        .user-info small { opacity: 0.8; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .welcome-card { background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .action-card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center; border-top: 4px solid #27ae60; }
+        .action-card h3 { margin-top: 0; color: #2c3e50; }
+        .action-card p { color: #555; margin: 1rem 0; }
+        .action-card .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .medications-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .medication-card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .medication-card h4 { margin-top: 0; color: #27ae60; }
+        .medication-card .detail { font-size: 0.9rem; color: #555; margin: 0.25rem 0; }
+        .btn { padding: 0.75rem 1.5rem; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer; border: none; font-size: 1rem; }
+        .btn-primary { background: #27ae60; color: white; }
+        .btn-primary:hover { background: #229954; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .error { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        .success { background: #d4edda; color: #155724; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        form { display: inline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>⚕️ nll-light - Prescriber Portal</h1>
+        <div class="user-info">
+            <div><strong th:text="${userName}">Dr. Name</strong></div>
+            <small>Role: Prescriber</small><br/>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-secondary" style="margin-top: 0.5rem;">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-card">
+            <h2>Welcome to the Prescriber Portal</h2>
+            <p>Manage patient prescriptions and view the medication catalog.</p>
+            <p><strong>Prescriber ID:</strong> <span th:text="${prescriberId}">prescriber-001</span></p>
+        </div>
+
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+        <div th:if="${success}" class="success" th:text="${success}"></div>
+
+        <div class="actions">
+            <div class="action-card">
+                <div class="icon">📝</div>
+                <h3>Create New Prescription</h3>
+                <p>Write a new prescription for a patient</p>
+                <a th:href="@{/prescriber/prescriptions/new}" class="btn btn-primary">Create Prescription</a>
+            </div>
+
+            <div class="action-card">
+                <div class="icon">💊</div>
+                <h3>Medication Catalog</h3>
+                <p>Browse available medications</p>
+                <p><strong th:text="${medications != null ? medications.size() : 0}">0</strong> medications available</p>
+            </div>
+
+            <div class="action-card">
+                <div class="icon">📋</div>
+                <h3>Patient Records</h3>
+                <p>View and manage patient prescriptions</p>
+                <p><em>Feature coming soon</em></p>
+            </div>
+        </div>
+
+        <h2 style="margin-top: 3rem;">Available Medications</h2>
+        <div th:if="${medications != null and !medications.isEmpty()}" class="medications-grid">
+            <div th:each="med : ${medications}" class="medication-card">
+                <h4 th:text="${med.tradeName}">Trade Name</h4>
+                <div class="detail"><strong>Generic:</strong> <span th:text="${med.genericName}">Generic Name</span></div>
+                <div class="detail"><strong>Form:</strong> <span th:text="${med.form}">Form</span></div>
+                <div class="detail"><strong>Strength:</strong> <span th:text="${med.strength}">Strength</span></div>
+                <div class="detail" th:if="${med.atcCode}"><strong>ATC Code:</strong> <span th:text="${med.atcCode}">Code</span></div>
+            </div>
+        </div>
+
+        <div th:if="${medications == null or medications.isEmpty()}" style="text-align: center; padding: 2rem; color: #777;">
+            <p>No medications available in the system.</p>
+        </div>
+    </div>
+</body>
+</html>

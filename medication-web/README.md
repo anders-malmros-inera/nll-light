@@ -1,14 +1,16 @@
-# Medication Web Application
+# NLL Light Web Application
 
-Spring Boot web application with Keycloak OAuth2/OpenID Connect authentication.
+Spring Boot web application with Keycloak OAuth2/OpenID Connect authentication and role-based dashboards.
 
 ## Overview
 
 This module provides:
-- **User Interface**: Thymeleaf-based web pages for medication browsing
+- **Role-Based User Interface**: Separate dashboards for PATIENT, PRESCRIBER, and PHARMACIST roles
 - **OAuth2 Client**: Authorization code flow integration with Keycloak
-- **Session Management**: Secure cookie-based sessions
+- **Custom Role Extraction**: Extracts roles from JWT `realm_access.roles` claim
+- **Session Management**: Secure cookie-based sessions with proper OIDC logout
 - **API Integration**: Calls medication-api via Kong gateway
+- **Custom Keycloak Theme**: Enhanced login UX with input trimming
 
 ## Architecture
 
@@ -111,26 +113,142 @@ public JwtDecoder jwtDecoder(
 - Without custom decoder, Spring tries to auto-discover at `localhost:8082` from inside the container (fails)
 - This bean fetches JWKS via container DNS while validating the browser-facing issuer
 
+## Role-Based Access Control
+
+### Custom OidcUserService
+
+The application extracts roles from the JWT `realm_access.roles` claim:
+
+```java
+@Bean
+public OAuth2UserService<OidcUserRequest, OidcUser> oidcUserService() {
+    final OidcUserService delegate = new OidcUserService();
+    
+    return (userRequest) -> {
+        OidcUser oidcUser = delegate.loadUser(userRequest);
+        
+        // Extract roles from realm_access.roles
+        Map<String, Object> claims = oidcUser.getClaims();
+        List<String> roles = extractRoles(claims);
+        
+        // Create authorities with both "ROLE_X" and "X" formats
+        Set<GrantedAuthority> authorities = new HashSet<>(oidcUser.getAuthorities());
+        for (String role : roles) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
+            authorities.add(new SimpleGrantedAuthority(role));
+        }
+        
+        return new DefaultOidcUser(authorities, oidcUser.getIdToken(), oidcUser.getUserInfo());
+    };
+}
+```
+
+### Role-Based Routing
+
+After successful login, users are redirected to their role-specific dashboard:
+
+```java
+@GetMapping("/")
+public String index(@AuthenticationPrincipal OidcUser principal) {
+    String userRole = getUserRole(principal);
+    
+    if ("PATIENT".equals(userRole)) {
+        return "redirect:/patient/dashboard";
+    } else if ("PRESCRIBER".equals(userRole)) {
+        return "redirect:/prescriber/dashboard";
+    } else if ("PHARMACIST".equals(userRole)) {
+        return "redirect:/pharmacist/dashboard";
+    }
+    return "index";
+}
+```
+
+### Dashboard Features
+
+#### Patient Dashboard (`/patient/dashboard`)
+- **Access**: `@PreAuthorize("hasAnyAuthority('ROLE_PATIENT', 'PATIENT')")`
+- **Features**:
+  - View all active prescriptions
+  - Access prescription details
+  - Track medication adherence
+  - Request refills
+
+#### Prescriber Dashboard (`/prescriber/dashboard`)
+- **Access**: `@PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")`
+- **Features**:
+  - Search patients by ID
+  - View patient prescription history
+  - Create new prescriptions
+  - Modify or cancel prescriptions
+
+#### Pharmacist Dashboard (`/pharmacist/dashboard`)
+- **Access**: `@PreAuthorize("hasAnyAuthority('ROLE_PHARMACIST', 'PHARMACIST')")`
+- **Features**:
+  - Browse medication catalog
+  - View medication details (NPL ID, ATC code)
+  - Search medications
+  - Access dispensing workflow (planned)
+
 ## Security Configuration
 
 ### SecurityFilterChain
 ```java
 @Bean
+@EnableMethodSecurity(prePostEnabled = true)
 public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     http
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/", "/login", "/error").permitAll()
+            .requestMatchers("/patient/**").hasAnyAuthority("ROLE_PATIENT", "PATIENT")
+            .requestMatchers("/prescriber/**").hasAnyAuthority("ROLE_PRESCRIBER", "PRESCRIBER")
+            .requestMatchers("/pharmacist/**").hasAnyAuthority("ROLE_PHARMACIST", "PHARMACIST")
             .anyRequest().authenticated()
         )
         .oauth2Login(oauth2 -> oauth2
             .loginPage("/login")
+            .userInfoEndpoint(userInfo -> userInfo
+                .oidcUserService(oidcUserService())
+            )
+        )
+        .logout(logout -> logout
+            .logoutSuccessHandler(oidcLogoutSuccessHandler())
         );
     return http.build();
 }
 ```
 
+### OIDC Logout with id_token_hint
+
+Proper logout requires terminating both the local session and the Keycloak SSO session:
+
+```java
+@Bean
+public LogoutSuccessHandler oidcLogoutSuccessHandler() {
+    return (request, response, authentication) -> {
+        if (authentication != null && authentication.getPrincipal() instanceof OidcUser) {
+            OidcUser oidcUser = (OidcUser) authentication.getPrincipal();
+            String idToken = oidcUser.getIdToken().getTokenValue();
+            
+            String logoutUrl = UriComponentsBuilder
+                .fromUriString("http://localhost:8082/auth/realms/nll-light/protocol/openid-connect/logout")
+                .queryParam("id_token_hint", idToken)
+                .queryParam("post_logout_redirect_uri", "http://localhost:8080/login?logout")
+                .build()
+                .toUriString();
+            
+            response.sendRedirect(logoutUrl);
+        } else {
+            response.sendRedirect("/login?logout");
+        }
+    };
+}
+```
+
 **Access Control**:
 - `/`, `/login`, `/error` → Public
+- `/patient/**` → PATIENT role required
+- `/prescriber/**` → PRESCRIBER role required
+- `/pharmacist/**` → PHARMACIST role required
 - All other endpoints → Require authentication
 
 **Login Flow**:
@@ -194,6 +312,71 @@ public List<Medication> getMedications() {
 **Environment Variables**:
 - `api.base-url` (default: `http://kong:8000` in Docker)
 
+## Custom Keycloak Theme
+
+### Enhanced Login Experience
+
+The application includes a custom Keycloak theme (`nll-light`) that improves the login UX:
+
+**Location**: `../keycloak/themes/nll-light/`
+
+**Features**:
+- **Input Trimming**: Automatically trims whitespace from username and password fields
+- **Blur Event**: Trims username on blur (when user clicks away)
+- **Submit Event**: Trims both fields when form is submitted
+- **Prevents Login Failures**: Eliminates common copy-paste whitespace issues
+
+**Configuration**:
+```properties
+# keycloak/themes/nll-light/login/theme.properties
+parent=keycloak
+import=common/keycloak
+scripts=js/trim-inputs.js
+```
+
+**JavaScript Implementation**:
+```javascript
+// keycloak/themes/nll-light/login/resources/js/trim-inputs.js
+document.addEventListener('DOMContentLoaded', function() {
+    const usernameField = document.getElementById('username');
+    const passwordField = document.getElementById('password');
+    const loginForm = document.getElementById('kc-form-login');
+    
+    // Trim username on blur
+    if (usernameField) {
+        usernameField.addEventListener('blur', function() {
+            this.value = this.value.trim();
+        });
+    }
+    
+    // Trim both on submit
+    if (loginForm) {
+        loginForm.addEventListener('submit', function() {
+            if (usernameField) usernameField.value = usernameField.value.trim();
+            if (passwordField) passwordField.value = passwordField.value.trim();
+        });
+    }
+});
+```
+
+**Realm Configuration**:
+The `nll-light` realm is configured to use this theme in `keycloak/realm-export.json`:
+```json
+{
+  "realm": "nll-light",
+  "loginTheme": "nll-light",
+  ...
+}
+```
+
+**Docker Setup**:
+```yaml
+# docker-compose.yml
+keycloak:
+  volumes:
+    - ./keycloak/themes:/opt/keycloak/themes
+```
+
 ## Testing
 
 ### E2E Tests (Playwright)
@@ -214,7 +397,7 @@ npm test
 **What it tests**:
 1. Navigate to http://localhost:8080
 2. Click "Logga in med Keycloak"
-3. Fill credentials (user666/secret)
+3. Fill credentials (patient001/patient001)
 4. Submit login form
 5. Verify redirect back to app
 6. Assert logged-in state (logout link visible)

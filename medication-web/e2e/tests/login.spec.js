@@ -3,8 +3,8 @@ const { test, expect } = require('@playwright/test');
 // Lightweight test: navigate to web app, click login, perform Keycloak login, confirm redirect back
 
 const APP_URL = process.env.APP_URL || 'http://localhost:8080';
-const KEYCLOAK_USER = process.env.KEYCLOAK_USER || 'user666';
-const KEYCLOAK_PASS = process.env.KEYCLOAK_PASS || 'secret';
+const KEYCLOAK_USER = process.env.KEYCLOAK_USER || 'patient001';
+const KEYCLOAK_PASS = process.env.KEYCLOAK_PASS || 'patient001';
 
 test('login via Keycloak', async ({ page }) => {
   // Go to app and click login

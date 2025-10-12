@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>NLL Light - Mina Recept</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+    }
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .header .user-info {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+    .nav {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .nav a {
+      text-decoration: none;
+      color: #2c3e50;
+      margin-right: 2rem;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      color: #3498db;
+    }
+    .nav a.active {
+      color: #3498db;
+      border-bottom: 2px solid #3498db;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .actions {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .btn {
+      background: #3498db;
+      color: white;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1rem;
+      transition: background 0.3s;
+    }
+    .btn:hover {
+      background: #2980b9;
+    }
+    .btn-success {
+      background: #27ae60;
+    }
+    .btn-success:hover {
+      background: #229954;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    .alert-success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .prescription-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 1.5rem;
+    }
+    .prescription-card {
+      background: white;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .prescription-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .prescription-card h3 {
+      margin: 0 0 0.5rem 0;
+      color: #2c3e50;
+      font-size: 1.25rem;
+    }
+    .prescription-card .medication-name {
+      color: #3498db;
+      font-weight: 600;
+    }
+    .prescription-card .strength {
+      color: #7f8c8d;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+    .prescription-card .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+    .prescription-card .info-label {
+      color: #7f8c8d;
+      font-weight: 500;
+    }
+    .prescription-card .info-value {
+      color: #2c3e50;
+    }
+    .prescription-card .status {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-top: 1rem;
+    }
+    .status.ACTIVE {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status.EXPIRED {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .status.CANCELLED {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .status.COMPLETED {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    .prescription-card .instructions {
+      background: #f8f9fa;
+      padding: 0.75rem;
+      border-left: 3px solid #3498db;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+      color: #2c3e50;
+    }
+    .prescription-card .view-details {
+      display: block;
+      text-align: center;
+      margin-top: 1rem;
+      padding: 0.5rem;
+      background: #ecf0f1;
+      color: #2c3e50;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    .prescription-card .view-details:hover {
+      background: #bdc3c7;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .empty-state h2 {
+      color: #7f8c8d;
+      margin-bottom: 1rem;
+    }
+    .empty-state p {
+      color: #95a5a6;
+      margin-bottom: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>NLL Light - Recepthantering</h1>
+    <div class="user-info">
+      Välkommen, <span th:text="${userName}">Användare</span>
+      <span th:if="${patientId}">| Patient-ID: <span th:text="${patientId}">patient-001</span></span>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <a href="/">Läkemedel</a>
+    <a href="/prescriptions" class="active">Mina Recept</a>
+    <form th:action="@{/logout}" method="post" style="display: inline; float: right;">
+      <button type="submit" class="btn" style="background: #e74c3c;">Logga ut</button>
+    </form>
+  </div>
+  
+  <div class="container">
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+    
+    <div class="actions">
+      <h2 style="margin: 0;">Mina Recept</h2>
+      <a href="/prescriptions/new" class="btn btn-success">+ Nytt Recept</a>
+    </div>
+    
+    <div th:if="${prescriptions.isEmpty()}" class="empty-state">
+      <h2>Inga recept hittades</h2>
+      <p>Du har för närvarande inga aktiva recept.</p>
+      <a href="/prescriptions/new" class="btn btn-success">Skapa ditt första recept</a>
+    </div>
+    
+    <div th:unless="${prescriptions.isEmpty()}" class="prescription-grid">
+      <div th:each="p : ${prescriptions}" class="prescription-card">
+        <h3>
+          <span class="medication-name" th:text="${p.medicationName}">Metformin</span>
+        </h3>
+        <div class="strength" th:text="${p.strength + ' - ' + p.form}">500mg - Tablet</div>
+        
+        <div class="instructions" th:if="${p.instructions}">
+          <strong>Instruktioner:</strong><br/>
+          <span th:text="${p.instructions}">Ta 1 tablett 2 gånger dagligen</span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Ordinerat:</span>
+          <span class="info-value" th:text="${#temporals.format(p.prescribedDate, 'yyyy-MM-dd')}">2024-01-15</span>
+        </div>
+        
+        <div class="info-row">
+          <span class="info-label">Giltighetstid:</span>
+          <span class="info-value">
+            <span th:text="${#temporals.format(p.startDate, 'yyyy-MM-dd')}">2024-01-15</span>
+            till
+            <span th:text="${#temporals.format(p.endDate, 'yyyy-MM-dd')}">2025-01-15</span>
+          </span>
+        </div>
+        
+        <div class="info-row" th:if="${p.refillsRemaining != null}">
+          <span class="info-label">Återstående uttag:</span>
+          <span class="info-value" th:text="${p.refillsRemaining}">3</span>
+        </div>
+        
+        <div class="info-row" th:if="${p.prescriberName}">
+          <span class="info-label">Förskrivare:</span>
+          <span class="info-value">
+            <span th:text="${p.prescriberName}">Dr. Anna Svensson</span>
+            <span th:if="${p.prescriberTitle}" th:text="', ' + ${p.prescriberTitle}">, Allmänläkare</span>
+          </span>
+        </div>
+        
+        <span class="status" th:classappend="${p.status}" th:text="${p.status}">ACTIVE</span>
+        
+        <a th:href="@{/prescriptions/{id}(id=${p.id})}" class="view-details">Visa detaljer →</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

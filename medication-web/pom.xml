@@ -9,8 +9,8 @@
   <modelVersion>4.0.0</modelVersion>
 
   <artifactId>medication-web</artifactId>
-  <name>medication-web</name>
-  <description>Web app consuming medication API</description>
+  <name>NLL Light Web</name>
+  <description>NLL Light web application with OAuth2/OIDC authentication</description>
 
   <dependencies>
     <dependency>

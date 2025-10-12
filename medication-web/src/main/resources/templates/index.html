@@ -12,6 +12,18 @@
     .user-info { background: #e8f4fd; padding: 1rem; margin-bottom: 1rem; border-radius: 4px; }
     .logout-btn { background: #dc3545; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
     .logout-btn:hover { background: #c82333; }
+    .nav-links { margin: 1rem 0; }
+    .nav-links a { 
+      display: inline-block;
+      background: #3498db; 
+      color: white; 
+      padding: 10px 20px; 
+      margin-right: 10px;
+      text-decoration: none; 
+      border-radius: 4px; 
+      transition: background 0.3s;
+    }
+    .nav-links a:hover { background: #2980b9; }
   </style>
 </head>
 <body>
@@ -21,6 +33,11 @@
   <form th:action="@{/logout}" method="post" style="display: inline;">
     <button type="submit" class="logout-btn">Logga ut</button>
   </form>
+</div>
+
+<div class="nav-links">
+  <a href="/prescriptions">📋 Mina Recept</a>
+  <a href="/">💊 Läkemedelskatalog</a>
 </div>
 
 <h1>Läkemedel</h1>

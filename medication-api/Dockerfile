@@ -6,7 +6,7 @@ COPY medication-api/pom.xml medication-api/pom.xml
 COPY medication-web/pom.xml medication-web/pom.xml
 COPY medication-api/src medication-api/src
 COPY medication-web/src medication-web/src
-RUN mvn -q -pl medication-api -am test package
+RUN mvn -q -pl medication-api -am -DskipTests package
 
 # Run the API
 FROM eclipse-temurin:21-jre

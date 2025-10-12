@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Pharmacist Dashboard - nll-light</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .header { background: #8e44ad; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .user-info { text-align: right; }
+        .user-info small { opacity: 0.8; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .welcome-card { background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .medications-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .medication-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #8e44ad; }
+        .medication-card h3 { margin-top: 0; color: #8e44ad; }
+        .medication-card .detail { margin: 0.5rem 0; color: #555; }
+        .medication-card .detail strong { color: #333; }
+        .availability-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+        .available { background: #d4edda; color: #155724; }
+        .unavailable { background: #f8d7da; color: #721c24; }
+        .btn { padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer; border: none; }
+        .btn-primary { background: #8e44ad; color: white; }
+        .btn-primary:hover { background: #7d3c98; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .no-medications { text-align: center; padding: 3rem; color: #777; }
+        .error { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        form { display: inline; }
+        .search-box { margin-bottom: 2rem; }
+        .search-box input { padding: 0.75rem; width: 100%; max-width: 500px; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>💊 nll-light - Pharmacist Portal</h1>
+        <div class="user-info">
+            <div><strong th:text="${userName}">Pharmacist</strong></div>
+            <small>Role: Pharmacist</small><br/>
+            <small th:if="${userEmail}" th:text="${userEmail}">email@example.com</small><br/>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-secondary" style="margin-top: 0.5rem;">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-card">
+            <h2>Welcome to the Medication Catalog</h2>
+            <p>Browse and search through all available medications in the system.</p>
+            <p><strong>Pharmacist ID:</strong> <span th:text="${pharmacistId}">pharmacist-001</span></p>
+            <p><strong>API Endpoint:</strong> <code th:text="${apiBaseUrl}">http://kong:8000</code></p>
+        </div>
+
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="🔍 Search medications by name, form, or ATC code..." onkeyup="filterMedications()"/>
+        </div>
+
+        <h2>Medication Catalog (<span th:text="${medications != null ? medications.size() : 0}">0</span> medications)</h2>
+        
+        <div th:if="${medications != null and !medications.isEmpty()}" class="medications-grid" id="medicationsGrid">
+            <div th:each="med : ${medications}" class="medication-card" th:attr="data-search=${med.tradeName + ' ' + med.genericName + ' ' + med.form + ' ' + (med.atcCode != null ? med.atcCode : '')}">
+                <h3 th:text="${med.tradeName}">Trade Name</h3>
+                <span class="availability-badge" th:classappend="${med.isAvailable ? 'available' : 'unavailable'}" 
+                      th:text="${med.isAvailable ? 'Available' : 'Unavailable'}">Available</span>
+                
+                <div class="detail"><strong>Generic Name:</strong> <span th:text="${med.genericName}">Generic</span></div>
+                <div class="detail"><strong>Form:</strong> <span th:text="${med.form}">Form</span></div>
+                <div class="detail"><strong>Strength:</strong> <span th:text="${med.strength}">Strength</span></div>
+                <div class="detail" th:if="${med.atcCode}"><strong>ATC Code:</strong> <span th:text="${med.atcCode}">Code</span></div>
+                <div class="detail" th:if="${med.price != null}"><strong>Price:</strong> <span th:text="${med.price}">0</span> SEK</div>
+                <div class="detail" th:if="${med.nplId}"><strong>NPL ID:</strong> <span th:text="${med.nplId}">NPL</span></div>
+                
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{'/pharmacist/medications/' + ${med.id}}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${medications == null or medications.isEmpty()}" class="no-medications">
+            <p>💊 No medications found in the system.</p>
+        </div>
+    </div>
+
+    <script>
+        function filterMedications() {
+            const input = document.getElementById('searchInput');
+            const filter = input.value.toLowerCase();
+            const grid = document.getElementById('medicationsGrid');
+            const cards = grid.getElementsByClassName('medication-card');
+
+            for (let i = 0; i < cards.length; i++) {
+                const searchData = cards[i].getAttribute('data-search').toLowerCase();
+                if (searchData.indexOf(filter) > -1) {
+                    cards[i].style.display = '';
+                } else {
+                    cards[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

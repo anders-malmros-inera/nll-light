@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>NLL Light - Skapa Recept</title>
+  <style>
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+    }
+    .header {
+      background: #2c3e50;
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    .header .user-info {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      opacity: 0.9;
+    }
+    .nav {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .nav a {
+      text-decoration: none;
+      color: #2c3e50;
+      margin-right: 2rem;
+      font-weight: 500;
+    }
+    .nav a:hover {
+      color: #3498db;
+    }
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 1rem;
+      color: #3498db;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+    .form-container {
+      background: white;
+      border-radius: 8px;
+      padding: 2rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .form-container h2 {
+      margin: 0 0 1.5rem 0;
+      color: #2c3e50;
+      font-size: 1.8rem;
+    }
+    .alert {
+      padding: 1rem;
+      border-radius: 4px;
+      margin-bottom: 1.5rem;
+    }
+    .alert-error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    .alert-info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #2c3e50;
+      font-weight: 600;
+    }
+    .form-group label .required {
+      color: #e74c3c;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    }
+    .form-group textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .form-group small {
+      display: block;
+      margin-top: 0.5rem;
+      color: #7f8c8d;
+      font-size: 0.875rem;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    .form-actions {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid #ecf0f1;
+      display: flex;
+      gap: 1rem;
+    }
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 1rem;
+      transition: background 0.3s;
+      font-weight: 600;
+    }
+    .btn-primary {
+      background: #27ae60;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #229954;
+    }
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>NLL Light - Recepthantering</h1>
+    <div class="user-info">
+      Välkommen, <span th:text="${userName}">Användare</span>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <a href="/">Läkemedel</a>
+    <a href="/prescriptions">Mina Recept</a>
+    <form th:action="@{/logout}" method="post" style="display: inline; float: right;">
+      <button type="submit" class="btn" style="background: #e74c3c;">Logga ut</button>
+    </form>
+  </div>
+  
+  <div class="container">
+    <a href="/prescriptions" class="back-link">← Tillbaka till alla recept</a>
+    
+    <div class="form-container">
+      <h2>Skapa Nytt Recept</h2>
+      
+      <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+      
+      <div class="alert alert-info">
+        <strong>ℹ️ OBS:</strong> Detta formulär är förberett för framtida funktionalitet. 
+        För närvarande saknas backend-endpoint för att skapa recept via API:t.
+      </div>
+      
+      <form th:action="@{/prescriptions}" th:object="${request}" method="post">
+        <div class="form-group">
+          <label for="medicationId">
+            Läkemedel <span class="required">*</span>
+          </label>
+          <select id="medicationId" th:field="*{medicationId}" required>
+            <option value="">-- Välj läkemedel --</option>
+            <option th:each="med : ${medications}" 
+                    th:value="${med.id}" 
+                    th:text="${med.name + ' - ' + med.description}">
+              Metformin - Diabetes medication
+            </option>
+          </select>
+          <small>Välj läkemedel från katalogen</small>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="strength">
+              Styrka <span class="required">*</span>
+            </label>
+            <input type="text" 
+                   id="strength" 
+                   th:field="*{strength}" 
+                   placeholder="t.ex. 500mg" 
+                   required/>
+            <small>Ange styrka med enhet (mg, g, etc.)</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="form">
+              Form <span class="required">*</span>
+            </label>
+            <select id="form" th:field="*{form}" required>
+              <option value="">-- Välj form --</option>
+              <option value="Tablet">Tablett</option>
+              <option value="Capsule">Kapsel</option>
+              <option value="Liquid">Vätska</option>
+              <option value="Injection">Injektion</option>
+              <option value="Cream">Kräm</option>
+              <option value="Patch">Plåster</option>
+              <option value="Inhaler">Inhalator</option>
+            </select>
+            <small>Välj läkemedelsform</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="instructions">
+            Doseringsanvisningar <span class="required">*</span>
+          </label>
+          <textarea id="instructions" 
+                    th:field="*{instructions}" 
+                    placeholder="t.ex. Ta 1 tablett 2 gånger dagligen med mat" 
+                    required></textarea>
+          <small>Ge tydliga instruktioner för hur läkemedlet ska tas</small>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="startDate">
+              Startdatum <span class="required">*</span>
+            </label>
+            <input type="date" 
+                   id="startDate" 
+                   th:field="*{startDate}" 
+                   required/>
+            <small>När receptet börjar gälla</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="endDate">
+              Slutdatum <span class="required">*</span>
+            </label>
+            <input type="date" 
+                   id="endDate" 
+                   th:field="*{endDate}" 
+                   required/>
+            <small>När receptet upphör att gälla</small>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="refillsAllowed">
+            Antal uttag tillåtna
+          </label>
+          <input type="number" 
+                 id="refillsAllowed" 
+                 th:field="*{refillsAllowed}" 
+                 min="0" 
+                 max="12" 
+                 placeholder="t.ex. 3"/>
+          <small>Antal gånger receptet kan hämtas ut (0-12)</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="prescriberId">
+            Förskrivare-ID
+          </label>
+          <input type="text" 
+                 id="prescriberId" 
+                 th:field="*{prescriberId}" 
+                 placeholder="t.ex. prescriber-001"/>
+          <small>ID för den förskrivande läkaren</small>
+        </div>
+        
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Skapa Recept</button>
+          <a href="/prescriptions" class="btn btn-secondary">Avbryt</a>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <script>
+    // Set default dates (today and one year from today)
+    document.addEventListener('DOMContentLoaded', function() {
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      
+      if (!startDateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        startDateInput.value = today;
+      }
+      
+      if (!endDateInput.value) {
+        const oneYearFromNow = new Date();
+        oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+        endDateInput.value = oneYearFromNow.toISOString().split('T')[0];
+      }
+    });
+  </script>
+</body>
+</html>

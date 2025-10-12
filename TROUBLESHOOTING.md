@@ -424,7 +424,7 @@ Invoke-RestMethod http://localhost:8001/routes | ConvertTo-Json -Depth 3
 docker compose exec kong curl http://medication-api:8080/api/medications
 ```
 
-### Medication Web
+### NLL Light Web
 ```powershell
 # Check environment variables
 docker compose exec medication-web printenv | Select-String "API_BASE_URL|SPRING"

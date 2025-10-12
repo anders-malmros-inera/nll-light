@@ -122,7 +122,7 @@ Data: Successfully routed to medication-api
 
 ---
 
-### 4. Medication Web Application ✅
+### 4. NLL Light Web Application ✅
 
 **Home Page Test**:
 ```

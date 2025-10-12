@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Patient Dashboard - nll-light</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 1.5rem; }
+        .user-info { text-align: right; }
+        .user-info small { opacity: 0.8; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+        .welcome-card { background: white; padding: 2rem; border-radius: 8px; margin-bottom: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .prescriptions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
+        .prescription-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 4px solid #3498db; }
+        .prescription-card h3 { margin-top: 0; color: #2c3e50; }
+        .prescription-card .medication-name { font-size: 1.2rem; font-weight: bold; color: #3498db; margin-bottom: 0.5rem; }
+        .prescription-card .detail { margin: 0.5rem 0; color: #555; }
+        .prescription-card .detail strong { color: #333; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; }
+        .status-ACTIVE { background: #d4edda; color: #155724; }
+        .status-COMPLETED { background: #d1ecf1; color: #0c5460; }
+        .status-CANCELLED { background: #f8d7da; color: #721c24; }
+        .btn { padding: 0.5rem 1rem; border-radius: 4px; text-decoration: none; display: inline-block; cursor: pointer; border: none; }
+        .btn-primary { background: #3498db; color: white; }
+        .btn-primary:hover { background: #2980b9; }
+        .btn-secondary { background: #95a5a6; color: white; }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .no-prescriptions { text-align: center; padding: 3rem; color: #777; }
+        .error { background: #f8d7da; color: #721c24; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; }
+        form { display: inline; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏥 nll-light - Patient Portal</h1>
+        <div class="user-info">
+            <div><strong th:text="${userName}">User</strong></div>
+            <small>Role: Patient</small><br/>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="btn btn-secondary" style="margin-top: 0.5rem;">Logout</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="welcome-card">
+            <h2>Welcome to Your Health Portal</h2>
+            <p>Here you can view your active and past prescriptions.</p>
+            <p><strong>Patient ID:</strong> <span th:text="${patientId}">patient-001</span></p>
+        </div>
+
+        <div th:if="${error}" class="error" th:text="${error}"></div>
+
+        <h2>Your Prescriptions</h2>
+        
+        <div th:if="${prescriptions != null and !prescriptions.isEmpty()}" class="prescriptions-grid">
+            <div th:each="prescription : ${prescriptions}" class="prescription-card">
+                <div class="medication-name" th:text="${prescription.medicationName}">Medication Name</div>
+                <span class="status-badge" th:classappend="'status-' + ${prescription.status}" th:text="${prescription.status}">ACTIVE</span>
+                
+                <div class="detail"><strong>Prescription #:</strong> <span th:text="${prescription.prescriptionNumber}">RX-123</span></div>
+                <div class="detail"><strong>Prescribed by:</strong> <span th:text="${prescription.prescriberName}">Dr. Name</span></div>
+                <div class="detail"><strong>Prescribed date:</strong> <span th:text="${prescription.prescribedDate}">2025-01-01</span></div>
+                <div class="detail"><strong>Start date:</strong> <span th:text="${prescription.startDate}">2025-01-01</span></div>
+                <div class="detail" th:if="${prescription.endDate}"><strong>End date:</strong> <span th:text="${prescription.endDate}">2025-01-31</span></div>
+                <div class="detail"><strong>Days supply:</strong> <span th:text="${prescription.daysSupply}">30</span> days</div>
+                <div class="detail" th:if="${prescription.refillsRemaining != null}"><strong>Refills remaining:</strong> <span th:text="${prescription.refillsRemaining}">0</span></div>
+                
+                <div style="margin-top: 1rem;">
+                    <a th:href="@{'/patient/prescriptions/' + ${prescription.id}}" class="btn btn-primary">View Details</a>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${prescriptions == null or prescriptions.isEmpty()}" class="no-prescriptions">
+            <p>📋 You have no prescriptions in the system.</p>
+            <p>Contact your healthcare provider if you believe this is an error.</p>
+        </div>
+    </div>
+</body>
+</html>
