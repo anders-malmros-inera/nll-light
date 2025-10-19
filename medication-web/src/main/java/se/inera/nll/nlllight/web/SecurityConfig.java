@@ -39,6 +39,10 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authz -> authz
                 .requestMatchers("/login").permitAll()
+                .requestMatchers("/prescriptions").permitAll()
+                .requestMatchers("/patient/**").permitAll()
+                .requestMatchers("/prescriber/**").permitAll()
+                .requestMatchers("/pharmacist/**").permitAll()
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2

@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,18 +31,28 @@ public class WebController {
     
     private String getUserRole(OAuth2User principal) {
         if (principal == null) return null;
-        
-        // Check authorities/roles
+
+        // First check user attributes - more reliable than authorities
+        if (principal.getAttribute("patient-id") != null) {
+            return "PATIENT";
+        } else if (principal.getAttribute("prescriber-id") != null) {
+            return "PRESCRIBER";
+        } else if (principal.getAttribute("pharmacist-id") != null) {
+            return "PHARMACIST";
+        }
+
+        // Fallback to checking authorities/roles
         for (GrantedAuthority authority : principal.getAuthorities()) {
             String role = authority.getAuthority();
-            if (role.equals("ROLE_PATIENT") || role.equals("PATIENT")) {
+            if ("PATIENT".equals(role) || "ROLE_PATIENT".equals(role)) {
                 return "PATIENT";
-            } else if (role.equals("ROLE_PRESCRIBER") || role.equals("PRESCRIBER")) {
+            } else if ("PRESCRIBER".equals(role) || "ROLE_PRESCRIBER".equals(role)) {
                 return "PRESCRIBER";
-            } else if (role.equals("ROLE_PHARMACIST") || role.equals("PHARMACIST")) {
+            } else if ("PHARMACIST".equals(role) || "ROLE_PHARMACIST".equals(role)) {
                 return "PHARMACIST";
             }
         }
+        System.out.println("No matching role found, authorities: " + principal.getAuthorities());
         return null;
     }
     
@@ -80,37 +91,23 @@ public class WebController {
 
     @GetMapping("/")
     public String index(Model model, @AuthenticationPrincipal OAuth2User principal) {
-        String userRole = getUserRole(principal);
+        String role = getUserRole(principal);
         
-        // Route to role-specific dashboard
-        if ("PATIENT".equals(userRole)) {
-            return "redirect:/patient/dashboard";
-        } else if ("PRESCRIBER".equals(userRole)) {
-            return "redirect:/prescriber/dashboard";
-        } else if ("PHARMACIST".equals(userRole)) {
-            return "redirect:/pharmacist/dashboard";
+        if (role != null) {
+            switch (role) {
+                case "PATIENT":
+                    return "redirect:/patient/dashboard";
+                case "PRESCRIBER":
+                    return "redirect:/prescriber/dashboard";
+                case "PHARMACIST":
+                    return "redirect:/pharmacist/dashboard";
+                default:
+                    return "redirect:/prescriptions"; // fallback
+            }
         }
         
-        // Default fallback - show medications (pharmacist view)
-        MedicationView[] meds = rest.get()
-                .uri("/api/medications")
-                .retrieve()
-                .body(MedicationView[].class);
-        List<MedicationView> medications = meds != null ? Arrays.asList(meds) : List.of();
-
-        model.addAttribute("apiBaseUrl", apiBaseUrl);
-        model.addAttribute("medications", medications);
-
-        // Add user information for greeting
-        if (principal != null) {
-            String name = principal.getAttribute("name");
-            String email = principal.getAttribute("email");
-            model.addAttribute("userName", name != null ? name : "User");
-            model.addAttribute("userEmail", email);
-            model.addAttribute("userRole", userRole);
-        }
-
-        return "index";
+        // No role determined, show generic prescriptions view
+        return "redirect:/prescriptions";
     }
 
     @GetMapping("/login")
@@ -123,18 +120,42 @@ public class WebController {
     
     @GetMapping("/prescriptions")
     public String prescriptions(Model model, @AuthenticationPrincipal OAuth2User principal) {
-        String patientId = getPatientId(principal);
+        String role = getUserRole(principal);
+        String userId = null;
+        PrescriptionView[] prescriptions = null;
         
-        PrescriptionView[] prescriptions = rest.get()
-                .uri("/api/v1/prescriptions")
-                .header("X-Patient-Id", patientId)
-                .retrieve()
-                .body(PrescriptionView[].class);
+        if ("PATIENT".equals(role)) {
+            userId = getPatientId(principal);
+            prescriptions = rest.get()
+                    .uri("/api/v1/prescriptions")
+                    .header("X-Patient-Id", userId)
+                    .retrieve()
+                    .body(PrescriptionView[].class);
+        } else if ("PRESCRIBER".equals(role)) {
+            userId = getPrescriberId(principal);
+            // For prescribers, we might need a different endpoint or filter
+            // For now, redirect to prescriber dashboard
+            return "redirect:/prescriber/dashboard";
+        } else if ("PHARMACIST".equals(role)) {
+            userId = getPharmacistId(principal);
+            // For pharmacists, we might need a different endpoint or filter
+            // For now, redirect to pharmacist dashboard
+            return "redirect:/pharmacist/dashboard";
+        } else {
+            // Fallback for unknown roles - assume patient
+            userId = getPatientId(principal);
+            prescriptions = rest.get()
+                    .uri("/api/v1/prescriptions")
+                    .header("X-Patient-Id", userId)
+                    .retrieve()
+                    .body(PrescriptionView[].class);
+        }
         
         List<PrescriptionView> prescriptionList = prescriptions != null ? Arrays.asList(prescriptions) : List.of();
         
         model.addAttribute("prescriptions", prescriptionList);
-        model.addAttribute("patientId", patientId);
+        model.addAttribute("patientId", userId);
+        model.addAttribute("userRole", role);
         
         // Add user information
         if (principal != null) {
@@ -167,6 +188,7 @@ public class WebController {
     }
     
     @GetMapping("/prescriptions/new")
+    @PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")
     public String newPrescriptionForm(Model model, @AuthenticationPrincipal OAuth2User principal) {
         // Get list of medications for dropdown
         MedicationView[] meds = rest.get()
@@ -188,6 +210,7 @@ public class WebController {
     }
     
     @PostMapping("/prescriptions")
+    @PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")
     public String createPrescription(@ModelAttribute CreatePrescriptionRequest request, 
                                     @AuthenticationPrincipal OAuth2User principal,
                                     RedirectAttributes redirectAttributes) {

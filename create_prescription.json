@@ -1,0 +1,11 @@
+{
+  "patientId": "patient-001",
+  "medicationId": 1,
+  "dose": 100,
+  "doseUnit": "mg",
+  "frequency": "daily",
+  "route": "oral",
+  "startDate": "2025-10-15",
+  "quantityPrescribed": 30,
+  "instructions": "Take one tablet daily"
+}

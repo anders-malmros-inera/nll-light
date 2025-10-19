@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="sv" xmlns:th="http://www.thymeleaf.org">
+<html lang="sv" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
   <meta charset="UTF-8"/>
   <title>NLL Light - Mina Recept</title>
@@ -219,13 +219,13 @@
     
     <div class="actions">
       <h2 style="margin: 0;">Mina Recept</h2>
-      <a href="/prescriptions/new" class="btn btn-success">+ Nytt Recept</a>
+      <a href="/prescriptions/new" class="btn btn-success" sec:authorize="hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')">+ Nytt Recept</a>
     </div>
     
     <div th:if="${prescriptions.isEmpty()}" class="empty-state">
       <h2>Inga recept hittades</h2>
       <p>Du har för närvarande inga aktiva recept.</p>
-      <a href="/prescriptions/new" class="btn btn-success">Skapa ditt första recept</a>
+      <a href="/prescriptions/new" class="btn btn-success" sec:authorize="hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')">Skapa ditt första recept</a>
     </div>
     
     <div th:unless="${prescriptions.isEmpty()}" class="prescription-grid">
@@ -233,7 +233,7 @@
         <h3>
           <span class="medication-name" th:text="${p.medicationName}">Metformin</span>
         </h3>
-        <div class="strength" th:text="${p.strength + ' - ' + p.form}">500mg - Tablet</div>
+        <div class="strength" th:text="${p.medicationStrength + ' - ' + p.medicationForm}">500mg - Tablet</div>
         
         <div class="instructions" th:if="${p.instructions}">
           <strong>Instruktioner:</strong><br/>
@@ -263,7 +263,7 @@
           <span class="info-label">Förskrivare:</span>
           <span class="info-value">
             <span th:text="${p.prescriberName}">Dr. Anna Svensson</span>
-            <span th:if="${p.prescriberTitle}" th:text="', ' + ${p.prescriberTitle}">, Allmänläkare</span>
+            <span th:if="${p.prescriberSpecialty}" th:text="', ' + ${p.prescriberSpecialty}">, Allmänläkare</span>
           </span>
         </div>
         

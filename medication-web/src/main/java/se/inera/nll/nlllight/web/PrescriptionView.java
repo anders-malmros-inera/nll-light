@@ -5,8 +5,8 @@ import java.time.LocalDate;
 public class PrescriptionView {
     private Long id;
     private String medicationName;
-    private String strength;
-    private String form;
+    private String medicationStrength;
+    private String medicationForm;
     private String instructions;
     private LocalDate prescribedDate;
     private LocalDate startDate;
@@ -14,7 +14,7 @@ public class PrescriptionView {
     private String status;
     private Integer refillsRemaining;
     private String prescriberName;
-    private String prescriberTitle;
+    private String prescriberSpecialty;
     
     // Getters and Setters
     public Long getId() { return id; }
@@ -23,11 +23,11 @@ public class PrescriptionView {
     public String getMedicationName() { return medicationName; }
     public void setMedicationName(String medicationName) { this.medicationName = medicationName; }
     
-    public String getStrength() { return strength; }
-    public void setStrength(String strength) { this.strength = strength; }
+    public String getMedicationStrength() { return medicationStrength; }
+    public void setMedicationStrength(String medicationStrength) { this.medicationStrength = medicationStrength; }
     
-    public String getForm() { return form; }
-    public void setForm(String form) { this.form = form; }
+    public String getMedicationForm() { return medicationForm; }
+    public void setMedicationForm(String medicationForm) { this.medicationForm = medicationForm; }
     
     public String getInstructions() { return instructions; }
     public void setInstructions(String instructions) { this.instructions = instructions; }
@@ -50,6 +50,6 @@ public class PrescriptionView {
     public String getPrescriberName() { return prescriberName; }
     public void setPrescriberName(String prescriberName) { this.prescriberName = prescriberName; }
     
-    public String getPrescriberTitle() { return prescriberTitle; }
-    public void setPrescriberTitle(String prescriberTitle) { this.prescriberTitle = prescriberTitle; }
+    public String getPrescriberSpecialty() { return prescriberSpecialty; }
+    public void setPrescriberSpecialty(String prescriberSpecialty) { this.prescriberSpecialty = prescriberSpecialty; }
 }

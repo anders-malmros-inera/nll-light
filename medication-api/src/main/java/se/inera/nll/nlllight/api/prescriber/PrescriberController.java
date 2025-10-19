@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import se.inera.nll.nlllight.api.prescription.PrescriptionService;
 import se.inera.nll.nlllight.api.prescription.dto.CreatePrescriptionRequest;
@@ -26,6 +27,7 @@ public class PrescriberController {
     }
     
     @PostMapping("/prescriptions")
+    @PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")
     @Operation(summary = "Create prescription", 
                description = "Creates a new prescription for a patient")
     public ResponseEntity<PrescriptionDTO> createPrescription(
@@ -34,7 +36,7 @@ public class PrescriberController {
         
         // TODO: Extract prescriberId from authentication token
         if (prescriberId == null) {
-            prescriberId = "prescriber-001"; // Default for testing
+            prescriberId = "prescriber1"; // Default for testing
         }
         
         PrescriptionDTO prescription = prescriptionService.createPrescription(request, prescriberId);
@@ -42,6 +44,7 @@ public class PrescriberController {
     }
     
     @PutMapping("/prescriptions/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")
     @Operation(summary = "Update prescription", 
                description = "Updates an existing prescription")
     public ResponseEntity<PrescriptionDTO> updatePrescription(
@@ -59,6 +62,7 @@ public class PrescriberController {
     }
     
     @DeleteMapping("/prescriptions/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_PRESCRIBER', 'PRESCRIBER')")
     @Operation(summary = "Cancel prescription", 
                description = "Cancels an existing prescription")
     public ResponseEntity<Void> cancelPrescription(

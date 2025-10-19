@@ -44,6 +44,7 @@ public class PrescriptionDTO {
     
     // Quantity
     private Integer quantityPrescribed;
+    private Integer quantityDispensed;
     private String quantityUnit;
     private Integer daysSupply;
     
@@ -235,6 +236,14 @@ public class PrescriptionDTO {
     
     public void setQuantityPrescribed(Integer quantityPrescribed) {
         this.quantityPrescribed = quantityPrescribed;
+    }
+    
+    public Integer getQuantityDispensed() {
+        return quantityDispensed;
+    }
+    
+    public void setQuantityDispensed(Integer quantityDispensed) {
+        this.quantityDispensed = quantityDispensed;
     }
     
     public String getQuantityUnit() {

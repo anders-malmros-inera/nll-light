@@ -96,6 +96,9 @@ public class Prescription {
     @Column(name = "quantity_prescribed")
     private Integer quantityPrescribed;
     
+    @Column(name = "quantity_dispensed", nullable = false)
+    private Integer quantityDispensed = 0;
+    
     @Column(name = "quantity_unit", length = 20)
     private String quantityUnit;
     
@@ -149,6 +152,9 @@ public class Prescription {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        if (quantityDispensed == null) {
+            quantityDispensed = 0;
+        }
     }
     
     @PreUpdate
@@ -348,6 +354,14 @@ public class Prescription {
     
     public void setQuantityPrescribed(Integer quantityPrescribed) {
         this.quantityPrescribed = quantityPrescribed;
+    }
+    
+    public Integer getQuantityDispensed() {
+        return quantityDispensed;
+    }
+    
+    public void setQuantityDispensed(Integer quantityDispensed) {
+        this.quantityDispensed = quantityDispensed;
     }
     
     public String getQuantityUnit() {

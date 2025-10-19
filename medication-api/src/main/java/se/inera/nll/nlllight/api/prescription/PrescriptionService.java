@@ -12,6 +12,7 @@ import se.inera.nll.nlllight.api.patient.PatientRepository;
 import se.inera.nll.nlllight.api.prescriber.Prescriber;
 import se.inera.nll.nlllight.api.prescriber.PrescriberRepository;
 import se.inera.nll.nlllight.api.prescription.dto.CreatePrescriptionRequest;
+import se.inera.nll.nlllight.api.prescription.dto.DispenseMedicationRequest;
 import se.inera.nll.nlllight.api.prescription.dto.PrescriptionDTO;
 import se.inera.nll.nlllight.api.prescription.dto.UpdatePrescriptionRequest;
 
@@ -119,6 +120,7 @@ public class PrescriptionService {
         
         // Quantity
         dto.setQuantityPrescribed(prescription.getQuantityPrescribed());
+        dto.setQuantityDispensed(prescription.getQuantityDispensed());
         dto.setQuantityUnit(prescription.getQuantityUnit());
         dto.setDaysSupply(prescription.getDaysSupply());
         
@@ -291,5 +293,41 @@ public class PrescriptionService {
         return prescriptions.stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
+    }
+    
+    public PrescriptionDTO dispenseMedication(DispenseMedicationRequest request, String pharmacistUserId) {
+        logger.info("Dispensing medication for prescription ID: {} by pharmacist: {}", 
+                   request.getPrescriptionId(), pharmacistUserId);
+        
+        Prescription prescription = prescriptionRepository.findById(request.getPrescriptionId())
+                .orElseThrow(() -> new IllegalArgumentException("Prescription not found"));
+        
+        // Validate prescription status
+        if (prescription.getStatus() != PrescriptionStatus.ACTIVE) {
+            throw new IllegalStateException("Can only dispense from active prescriptions");
+        }
+        
+        // Calculate new dispensed quantity
+        int currentDispensed = prescription.getQuantityDispensed() != null ? prescription.getQuantityDispensed() : 0;
+        int newDispensed = currentDispensed + request.getQuantityToDispense();
+        
+        // Check if dispensing would exceed prescribed quantity
+        if (prescription.getQuantityPrescribed() != null && newDispensed > prescription.getQuantityPrescribed()) {
+            throw new IllegalStateException("Cannot dispense more than prescribed quantity");
+        }
+        
+        // Update dispensed quantity
+        prescription.setQuantityDispensed(newDispensed);
+        
+        // If fully dispensed, mark as completed
+        if (prescription.getQuantityPrescribed() != null && newDispensed >= prescription.getQuantityPrescribed()) {
+            prescription.setStatus(PrescriptionStatus.COMPLETED);
+        }
+        
+        Prescription saved = prescriptionRepository.save(prescription);
+        logger.info("Medication dispensed successfully. Prescription ID: {}, Total dispensed: {}", 
+                   prescription.getId(), newDispensed);
+        
+        return toDTO(saved);
     }
 }
